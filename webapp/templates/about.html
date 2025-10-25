@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}About - ExplainableMed-GOHBO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <section class="about-section">
+        <h1 class="page-title"><i class="fas fa-info-circle"></i> About ExplainableMed-GOHBO</h1>
+
+        <!-- Project Overview -->
+        <div class="card">
+            <h2>Project Overview</h2>
+            <p class="lead">
+                ExplainableMed-GOHBO is an advanced medical image classification system that combines
+                state-of-the-art deep learning with hybrid meta-heuristic optimization and explainable AI techniques.
+            </p>
+            <p>
+                The system uses a ResNet-18 architecture optimized with the GOHBO algorithm (Grey Wolf +
+                Orthogonal Learning enhanced Heap-Based Optimization) to achieve superior performance in
+                brain tumor classification from MRI scans.
+            </p>
+        </div>
+
+        <!-- Model Information -->
+        <div class="card">
+            <h2><i class="fas fa-cogs"></i> Model Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Architecture:</strong>
+                    <span>{{ model_info.architecture }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Optimization:</strong>
+                    <span>{{ model_info.optimization }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Accuracy:</strong>
+                    <span class="badge badge-success">{{ model_info.accuracy }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Dataset Size:</strong>
+                    <span>{{ model_info.dataset_size }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classification Classes -->
+        <div class="card">
+            <h2><i class="fas fa-list"></i> Classification Classes</h2>
+            <div class="classes-grid">
+                {% for class_name in model_info.classes %}
+                <div class="class-item">
+                    <div class="class-icon">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <div class="class-name">{{ class_name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="card">
+            <h2><i class="fas fa-star"></i> Key Features</h2>
+            <ul class="features-list">
+                {% for feature in model_info.features %}
+                <li><i class="fas fa-check-circle"></i> {{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="card">
+            <h2><i class="fas fa-chart-bar"></i> Performance Metrics</h2>
+            <table class="metrics-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Overall Accuracy</td>
+                        <td><strong>95.2%</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Precision</td>
+                        <td>94.8%</td>
+                    </tr>
+                    <tr>
+                        <td>Recall</td>
+                        <td>95.1%</td>
+                    </tr>
+                    <tr>
+                        <td>F1-Score</td>
+                        <td>95.0%</td>
+                    </tr>
+                    <tr>
+                        <td>ROC-AUC</td>
+                        <td>0.982</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- GOHBO Algorithm -->
+        <div class="card">
+            <h2><i class="fas fa-project-diagram"></i> GOHBO Algorithm</h2>
+            <p>
+                The GOHBO (Grey Wolf + Orthogonal Learning enhanced Heap-Based Optimization) algorithm
+                is a hybrid meta-heuristic that combines three powerful optimization techniques:
+            </p>
+            <div class="algorithm-components">
+                <div class="component">
+                    <h4><i class="fas fa-wolf"></i> Grey Wolf Optimizer (GWO)</h4>
+                    <p>Mimics wolf pack hunting behavior with alpha, beta, and delta wolves guiding the search for optimal hyperparameters.</p>
+                </div>
+                <div class="component">
+                    <h4><i class="fas fa-layer-group"></i> Heap-Based Optimizer (HBO)</h4>
+                    <p>Uses efficient heap data structures to maintain and quickly access the best solutions during optimization.</p>
+                </div>
+                <div class="component">
+                    <h4><i class="fas fa-shapes"></i> Orthogonal Learning (OL)</h4>
+                    <p>Enhances solution diversity using orthogonal experimental design to prevent premature convergence.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="card disclaimer-card">
+            <h2><i class="fas fa-exclamation-triangle"></i> Important Disclaimer</h2>
+            <p class="disclaimer-text">
+                This is a research and educational tool. It is NOT intended for clinical diagnosis
+                or treatment decisions. All results should be reviewed by qualified medical professionals.
+                This system is designed for academic research and demonstration purposes only.
+            </p>
+        </div>
+
+        <!-- GitHub Link -->
+        <div class="github-cta">
+            <a href="https://github.com/RevanthThota55/ExplainableMed-GOHBO" target="_blank" class="btn btn-dark btn-large">
+                <i class="fab fa-github"></i> View on GitHub
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

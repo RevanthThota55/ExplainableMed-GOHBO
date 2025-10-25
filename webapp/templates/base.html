@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ExplainableMed-GOHBO - Medical Image Classification with AI Explainability">
+    <title>{% block title %}ExplainableMed-GOHBO{% endblock %}</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-brain" style="color: #2563EB; font-size: 1.8rem; margin-right: 10px;"></i>
+                <span class="brand-text">ExplainableMed-GOHBO</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
+                    <i class="fas fa-info-circle"></i> About
+                </a>
+                <a href="https://github.com/RevanthThota55/ExplainableMed-GOHBO" target="_blank" class="nav-link">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ExplainableMed-GOHBO</h4>
+                    <p>Medical Image Classification with AI Explainability</p>
+                    <p class="disclaimer"><strong>Disclaimer:</strong> This is a research tool for educational purposes only. Not intended for clinical diagnosis.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li><i class="fas fa-check-circle"></i> GOHBO Optimization</li>
+                        <li><i class="fas fa-check-circle"></i> Grad-CAM Explainability</li>
+                        <li><i class="fas fa-check-circle"></i> MC Dropout Uncertainty</li>
+                        <li><i class="fas fa-check-circle"></i> Clinical Reports</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://github.com/RevanthThota55/ExplainableMed-GOHBO" target="_blank">
+                            <i class="fab fa-github"></i> View on GitHub
+                        </a></li>
+                        <li><a href="{{ url_for('about') }}"><i class="fas fa-info"></i> Documentation</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ExplainableMed-GOHBO | Built with PyTorch & Flask</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

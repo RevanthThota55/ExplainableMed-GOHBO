@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor AI Classification</title>
+
+    <!-- Enhanced Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Poppins", sans-serif;
+            background: radial-gradient(circle at top, #6a85f1 0%, #391d69 80%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            backdrop-filter: blur(40px);
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            width: 100%;
+            max-width: 850px;
+            padding: 45px;
+            color: white;
+            animation: fadeIn 0.8s ease;
+            box-shadow: 0 10px 60px rgba(0,0,0,0.5);
+        }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            background: linear-gradient(to right, #b3c6ff, #e4d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .upload-area {
+            border: 2.5px dashed #d2d5ff;
+            backdrop-filter: blur(10px);
+            background: rgba(107,137,255,0.15);
+            border-radius: 18px;
+            padding: 65px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: .3s ease;
+            animation: pulseBorder 3s infinite ease-in-out;
+        }
+
+        @keyframes pulseBorder {
+            0% { border-color: #fff5; }
+            50% { border-color: #e6ddff; }
+            100% { border-color: #fff5; }
+        }
+
+        .upload-area:hover {
+            transform: scale(1.03);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .upload-icon {
+            font-size: 4.5em;
+            opacity: 0.92;
+            margin-bottom: 10px;
+        }
+        .upload-text { font-size: 1.4em; font-weight: 600; margin-bottom: 6px; color: #fff; }
+        .upload-subtext { font-size: 0.95em; opacity: 0.8; }
+
+        #fileInput { display: none; }
+
+        .loading { display:none;text-align:center;margin-top:20px; }
+        .spinner {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: 6px solid #ffffff40;
+            border-top-color: #bfa3ff;
+            animation: spin 1s linear infinite;
+            margin: 14px auto;
+        }
+        @keyframes spin { 0%{transform:rotate(0);}100%{transform:rotate(360deg);} }
+
+        .results { display:none;margin-top:30px;color:#fff; }
+        .result-image img {
+            max-width: 100%;
+            border-radius: 18px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.35);
+            transition: .3s;
+        }
+        .result-image img:hover {
+            transform: scale(1.05);
+        }
+
+        .prediction-box {
+            margin-top: 25px;
+            background: linear-gradient(135deg, #8566ff, #43207c);
+            padding: 30px;
+            border-radius: 18px;
+            text-align: center;
+            transform: perspective(800px) translateZ(20px);
+        }
+        .prediction-value { font-size: 2.2em; font-weight: 700; margin: 5px 0; }
+        .confidence { font-size: 1.3em; opacity: .88; }
+
+        .probabilities {
+            background: rgba(255,255,255,0.13);
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 18px;
+        }
+        .prob-label { display:flex;justify-content:space-between;font-size:1em;margin-bottom:5px; }
+        .prob-bar {
+            background: #3a2c8090;
+            height: 28px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .prob-fill {
+            background: linear-gradient(90deg,#bba7ff,#d6c8ff);
+            height:100%;
+            padding-right:10px;
+            display:flex;align-items:center;justify-content:flex-end;
+            color:black;font-weight:600;
+            transition:.5s;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #d5c7ff, #8e5dff);
+            color:black;
+            font-weight:600;
+            padding:15px 40px;
+            border:none;
+            border-radius:14px;
+            width:100%;
+            font-size:1.15em;
+            margin-top:22px;
+            cursor:pointer;
+            transition:.3s;
+        }
+        .reset-btn:hover { transform:scale(1.05); }
+
+        .error {
+            background:#ffc9c9;
+            color:#a10000;
+            padding:15px; border-radius:12px;
+            margin-top:20px;
+            display:none;
+            text-align:center;
+        }
+
+        .footer {
+            text-align:center;margin-top:30px;
+            font-size:.95em;opacity:.75;color:#eee;
+        }
+
+        @keyframes fadeIn {
+            from{opacity:0;transform:translateY(25px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Brain Tumor AI Classifier</h1>
+            <p>Upload an MRI scan for real-time diagnosis using Deep Learning</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <div class="upload-text">Drop MRI Scan Here</div>
+            <div class="upload-subtext">or click to upload</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing MRI scan with AI Model...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="result-image">
+                <img id="resultImage">
+            </div>
+
+            <div class="prediction-box">
+                <div class="prediction-value" id="prediction">-</div>
+                <div class="confidence">Confidence: <span id="confidence">0</span>%</div>
+            </div>
+
+            <div class="probabilities">
+                <div class="prob-title">Detailed Class Probabilities</div>
+                <div id="probabilitiesList"></div>
+            </div>
+
+            <button class="reset-btn" onclick="resetApp()">Analyze Another Image</button>
+        </div>
+
+        <div class="footer">ResNet18 Tumor Detection Model | Accuracy 98.55%</div>
+    </div>
+
+
+<script>
+    const uploadArea = document.getElementById("uploadArea");
+    const fileInput = document.getElementById("fileInput");
+    const loading = document.getElementById("loading");
+    const results = document.getElementById("results");
+    const errorEl = document.getElementById("error");
+
+    uploadArea.onclick = ()=> fileInput.click();
+    uploadArea.ondragover = e => { e.preventDefault(); uploadArea.classList.add("dragover"); }
+    uploadArea.ondragleave = ()=> uploadArea.classList.remove("dragover");
+
+    uploadArea.ondrop = e => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        handleFile(e.dataTransfer.files[0]);
+    };
+
+    fileInput.onchange = e => handleFile(e.target.files[0]);
+
+    function handleFile(file){
+        if (!file || !file.type.startsWith("image/"))
+            return showError("Please upload a valid MRI image file");
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        uploadArea.style.display="none";
+        loading.style.display="block";
+        errorEl.style.display="none";
+        results.style.display="none";
+
+        fetch("/predict",{method:"POST",body:formData})
+        .then(res=>res.json())
+        .then(data=>{
+            loading.style.display="none";
+            if(data.success) showResults(data);
+            else showError(data.error || "Prediction failed");
+        })
+        .catch(err=>{
+            loading.style.display="none";
+            showError("Request failed: "+err.message);
+        });
+    }
+
+    function showResults(data){
+        document.getElementById("resultImage").src="data:image/jpeg;base64,"+data.image;
+        document.getElementById("prediction").textContent=data.prediction;
+        document.getElementById("confidence").textContent=data.confidence;
+
+        const probs=document.getElementById("probabilitiesList");
+        probs.innerHTML="";
+
+        const names={
+            glioma:"Glioma Tumor",
+            meningioma:"Meningioma Tumor",
+            notumor:"Healthy / No Tumor",
+            pituitary:"Pituitary Tumor"
+        };
+
+        for(const [cls,val] of Object.entries(data.probabilities)){
+            probs.innerHTML+=`
+                <div class="prob-label">
+                    <span>${names[cls]}</span>
+                    <span>${val}%</span>
+                </div>
+                <div class="prob-bar">
+                    <div class="prob-fill" style="width:${val}%">${val>10?val+"%":""}</div>
+                </div>
+            `;
+        }
+
+        results.style.display="block";
+    }
+
+    function showError(msg){
+        errorEl.textContent=msg;
+        errorEl.style.display="block";
+        uploadArea.style.display="block";
+    }
+
+    function resetApp(){
+        uploadArea.style.display="block";
+        results.style.display="none";
+        errorEl.style.display="none";
+        fileInput.value="";
+    }
+</script>
+
+</body>
+</html>
