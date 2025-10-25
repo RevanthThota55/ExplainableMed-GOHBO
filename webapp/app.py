@@ -54,7 +54,7 @@ app.config['UPLOAD_FOLDER'].mkdir(exist_ok=True)
 MODEL = None
 GRADCAM = None
 MC_PREDICTOR = None
-device = torch.device('cpu') 
+DEVICE = torch.device('cpu') 
 
 # Class configuration
 CLASS_NAMES = ['Glioma Tumor', 'Meningioma Tumor', 'No Tumor', 'Pituitary Tumor']
@@ -81,51 +81,114 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 
-def load_model(model_path='models/checkpoints/best_model.pth'):
-    """Load the trained model"""
+def load_standard_resnet18(checkpoint_path, device):
+    """Load standard ResNet-18 model (for compatibility with pre-trained models)"""
+    from torchvision import models
+
+    print("  Loading as standard ResNet-18...")
+    model = models.resnet18(pretrained=False)
+
+    # Modify final layer for 4 classes
+    num_features = model.fc.in_features
+    model.fc = torch.nn.Linear(num_features, 4)
+
+    # Load weights
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint)
+
+    return model.to(device)
+
+
+def load_model(model_path='models/brain_tumor_resnet18.pth'):
+    """Load the trained model (supports both MedicalResNet18 and standard ResNet-18)"""
     global MODEL, GRADCAM, MC_PREDICTOR
 
     print("Loading model...")
 
-    # Create model
-    MODEL = MedicalResNet18(
-        num_classes=4,
-        input_channels=3,
-        pretrained=False,
-        enable_mc_dropout=True
-    ).to(DEVICE)
-
-    # Load weights
     checkpoint_path = BASE_DIR / model_path
-    if checkpoint_path.exists():
-        checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
-        MODEL.load_state_dict(checkpoint['model_state_dict'])
-        print(f"✓ Model loaded from {model_path}")
-    else:
+
+    if not checkpoint_path.exists():
         print(f"⚠️  Model not found at {checkpoint_path}")
         print("   Using randomly initialized model (for demo purposes)")
+        # Use MedicalResNet18 with random weights
+        MODEL = MedicalResNet18(
+            num_classes=4,
+            input_channels=3,
+            pretrained=False,
+            enable_mc_dropout=True
+        ).to(DEVICE)
+        model_type = "MedicalResNet18 (random)"
+        target_layer = 'layer4'
+    else:
+        # Try loading as MedicalResNet18 first
+        try:
+            print("  Attempting to load as MedicalResNet18...")
+            MODEL = MedicalResNet18(
+                num_classes=4,
+                input_channels=3,
+                pretrained=False,
+                enable_mc_dropout=True
+            ).to(DEVICE)
+
+            checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+
+            if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                MODEL.load_state_dict(checkpoint['model_state_dict'])
+            else:
+                MODEL.load_state_dict(checkpoint)
+
+            model_type = "MedicalResNet18"
+            target_layer = 'layer4'
+            print(f"  ✓ Loaded as MedicalResNet18")
+
+        except (RuntimeError, KeyError) as e:
+            # Fall back to standard ResNet-18
+            print(f"  MedicalResNet18 failed, trying standard ResNet-18...")
+            MODEL = load_standard_resnet18(checkpoint_path, DEVICE)
+            model_type = "Standard ResNet-18"
+            target_layer = 'layer4'  # For standard ResNet-18, layer4 is directly accessible
+            print(f"  ✓ Loaded as Standard ResNet-18")
+
+        print(f"✓ Model loaded from {model_path} ({model_type})")
 
     MODEL.eval()
 
-    # Initialize Grad-CAM
-    GRADCAM = GradCAM(MODEL, target_layer='layer4', device=DEVICE)
+    # Initialize Grad-CAM with appropriate target layer
+    # For standard ResNet-18, need to access layer4 directly
+    if hasattr(MODEL, 'backbone'):
+        # MedicalResNet18 structure
+        GRADCAM = GradCAM(MODEL, target_layer='layer4', device=DEVICE)
+    else:
+        # Standard ResNet-18 structure - patch for Grad-CAM compatibility
+        GRADCAM = GradCAM(MODEL, target_layer='layer4', device=DEVICE)
 
     # Initialize MC Dropout predictor
-    MC_PREDICTOR = MCDropoutPredictor(MODEL, num_passes=10, device=DEVICE)  # 10 passes for speed
+    # Standard ResNet-18 doesn't have MC dropout, but we can still use it
+    MC_PREDICTOR = MCDropoutPredictor(MODEL, num_passes=10, device=DEVICE)
 
     print("✓ Grad-CAM and MC Dropout initialized")
+    print(f"✓ Using model type: {model_type}")
 
 
 def image_to_base64(image_array):
     """Convert numpy image array to base64 string"""
-    if image_array.max() <= 1.0:
-        image_array = (image_array * 255).astype(np.uint8)
+    # Ensure array is a copy to avoid modifying original
+    image_array = np.array(image_array)
 
-    # Convert to PIL Image
+    # Normalize to 0-255 range if needed
+    if image_array.dtype == np.float32 or image_array.dtype == np.float64:
+        if image_array.max() <= 1.0:
+            image_array = (image_array * 255)
+        image_array = image_array.astype(np.uint8)
+    elif image_array.dtype != np.uint8:
+        # Ensure it's uint8
+        image_array = image_array.astype(np.uint8)
+
+    # Convert to PIL Image with explicit mode
     if len(image_array.shape) == 2:  # Grayscale
-        image = Image.fromarray(image_array)
-    else:
-        image = Image.fromarray(image_array.astype(np.uint8))
+        image = Image.fromarray(image_array, mode='L')
+    else:  # RGB
+        image = Image.fromarray(image_array, mode='RGB')
 
     # Convert to base64
     buffered = io.BytesIO()
